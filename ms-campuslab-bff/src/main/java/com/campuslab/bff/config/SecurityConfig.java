@@ -86,6 +86,10 @@ public class SecurityConfig {
                 .requestMatchers(new AntPathRequestMatcher("/actuator/info")).permitAll()
 
                 // --- Autorización por rol de negocio ---
+                // Ruta de prueba para verificar rapidamente la validacion de JWT +
+                // rol ADMIN (ver SampleController#adminPing).
+                .requestMatchers(new AntPathRequestMatcher("/api/admin/**")).hasRole("ADMIN")
+
                 // Administración de laboratorio: solo Admin.
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/admin/**")).hasRole("ADMIN")
 

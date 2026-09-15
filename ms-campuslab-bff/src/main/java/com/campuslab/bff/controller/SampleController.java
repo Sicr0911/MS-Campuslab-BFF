@@ -32,6 +32,12 @@ public class SampleController {
         return Map.of("mensaje", "Acceso concedido: rol ADMIN verificado.");
     }
 
+    @GetMapping("/api/admin/ping")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Map<String, String> adminPingV2() {
+        return Map.of("mensaje", "Acceso concedido: rol ADMIN verificado (ruta /api/admin).");
+    }
+
     @GetMapping("/api/v1/auditoria/reportes")
     @PreAuthorize("hasAnyRole('ADMIN', 'AUDITOR')")
     public Map<String, String> reportesAuditoria() {
