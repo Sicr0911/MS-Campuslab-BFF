@@ -1,0 +1,49 @@
+server:
+  port: 8080
+  error:
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
+
+spring:
+  application:
+    name: ms-campuslab-bff
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Reemplazar {tenant-id} por el Tenant ID (Directory ID) de Azure AD.
+          # v2.0 endpoint (recomendado): valida iss = https://login.microsoftonline.com/{tenant-id}/v2.0
+          issuer-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID:TENANT_ID_PLACEHOLDER}/v2.0
+
+          # Alternativa explícita al issuer-uri (Spring resuelve el JWK Set vía
+          # OIDC discovery de todos modos; se deja documentado por si el
+          # entorno no tiene salida a Internet y se requiere fijar la URL del JWKS).
+          # jwk-set-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID:TENANT_ID_PLACEHOLDER}/discovery/v2.0/keys
+
+# Propiedades propias de la aplicación (no estándar de Spring),
+# usadas por JwtDecoderConfig / JwtAuthenticationConverter.
+campuslab:
+  security:
+    azure:
+      tenant-id: ${AZURE_TENANT_ID:TENANT_ID_PLACEHOLDER}
+      # Client ID (Application ID) de la app registrada en Azure AD para este BFF.
+      # El validador de audiencia exige que el claim "aud" del JWT coincida con este valor.
+      audience: ${AZURE_CLIENT_ID:API_APP_ID_URI_OR_CLIENT_ID_PLACEHOLDER}
+    # Nombre del claim dentro del JWT donde Azure AD entrega los roles de la
+    # aplicación (App Roles). Por defecto Azure AD usa "roles".
+    roles-claim: roles
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    org.springframework.security: INFO
