@@ -35,6 +35,13 @@ campuslab:
     # aplicación (App Roles). Por defecto Azure AD usa "roles".
     roles-claim: roles
 
+  # URLs base de los microservicios de dominio hacia los que este BFF enruta
+  # (ver GatewayConfig). En docker-compose se sobreescriben con el nombre del
+  # servicio en la red (ej. http://ms-campuslab-catalog:8081).
+  services:
+    catalog-base-url: ${CATALOG_SERVICE_URL:http://localhost:8081}
+    bookings-base-url: ${BOOKINGS_SERVICE_URL:http://localhost:8082}
+
 management:
   endpoints:
     web:

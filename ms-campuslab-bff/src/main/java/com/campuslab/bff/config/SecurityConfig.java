@@ -94,13 +94,29 @@ public class SecurityConfig {
 
                 // Reservas y prácticas de laboratorio: cualquier rol autenticado
                 // del dominio académico, incluido el Estudiante.
-                .requestMatchers(HttpMethod.GET, new AntPathRequestMatcher("/api/v1/reservas/**"))
+                .requestMatchers(HttpMethod.GET, "/api/v1/reservas/**")
                     .hasAnyRole("ADMIN", "TECNICO", "ESTUDIANTE")
-                .requestMatchers(HttpMethod.POST, new AntPathRequestMatcher("/api/v1/reservas/**"))
+                .requestMatchers(HttpMethod.POST, "/api/v1/reservas/**")
                     .hasAnyRole("ADMIN", "ESTUDIANTE")
 
                 // Reportes y trazabilidad: Admin y Auditor.
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/auditoria/**")).hasAnyRole("ADMIN", "AUDITOR")
+
+                // --- Rutas reenviadas por el gateway a los microservicios de dominio ---
+                // Catalogo (ms-campuslab-catalog): consulta abierta a cualquier rol
+                // academico; alta y modificacion de stock/cupo reservada a Admin/Tecnico.
+                .requestMatchers(HttpMethod.GET, "/api/catalog/**")
+                    .hasAnyRole("ADMIN", "TECNICO", "ESTUDIANTE", "DOCENTE")
+                .requestMatchers(new AntPathRequestMatcher("/api/catalog/**")).hasAnyRole("ADMIN", "TECNICO")
+
+                // Reservas (ms-campuslab-bookings): mismo criterio que las rutas de
+                // referencia /api/v1/reservas/** de mas arriba.
+                .requestMatchers(HttpMethod.GET, "/api/bookings/**")
+                    .hasAnyRole("ADMIN", "TECNICO", "ESTUDIANTE", "DOCENTE")
+                .requestMatchers(HttpMethod.POST, "/api/bookings/**")
+                    .hasAnyRole("ADMIN", "ESTUDIANTE")
+                .requestMatchers(HttpMethod.PUT, "/api/bookings/**")
+                    .hasAnyRole("ADMIN", "TECNICO", "ESTUDIANTE", "DOCENTE")
 
                 // Cualquier otra ruta bajo /api requiere, al menos, un JWT válido.
                 .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()

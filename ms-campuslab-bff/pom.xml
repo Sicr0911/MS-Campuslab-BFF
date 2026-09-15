@@ -22,6 +22,7 @@
         <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
     </properties>
 
     <dependencies>
@@ -29,6 +30,19 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--
+            Spring Cloud Gateway Server MVC: enruta las peticiones entrantes hacia
+            ms-campuslab-catalog y ms-campuslab-bookings (ver GatewayConfig).
+            Se usa la variante "MVC" (basada en Servlet) y no la clasica reactiva
+            porque esta app ya usa spring-boot-starter-web + Spring Security
+            tradicional (SecurityFilterChain/HttpSecurity); la variante reactiva
+            requiere spring-webflux y rompe esa configuracion.
+        -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway-mvc</artifactId>
         </dependency>
 
         <!-- Spring Security core -->
@@ -73,6 +87,18 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>
