@@ -21,6 +21,11 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 /**
  * Configuración central de seguridad del BFF.
@@ -73,6 +78,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // Habilita el CorsFilter de Spring Security con la configuracion del
+            // bean corsConfigurationSource(): sin esto, el navegador del frontend
+            // (otro origen, localhost:4200) bloquea las respuestas antes de que
+            // lleguen a la app, y las peticiones preflight (OPTIONS) ni siquiera
+            // se responderian correctamente.
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
             // API stateless protegida por Bearer JWT: no aplica CSRF de formularios.
             .csrf(csrf -> csrf.disable())
 
@@ -122,6 +134,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/bookings/**")
                     .hasAnyRole("ADMIN", "TECNICO", "ESTUDIANTE", "DOCENTE")
 
+                // Auditoria (ms-campuslab-audit) y reportes/KPIs (ms-campuslab-report):
+                // ambos microservicios ya exigen el mismo rol internamente, esto es
+                // ademas defensa en profundidad a nivel de gateway.
+                .requestMatchers(new AntPathRequestMatcher("/api/audit/**")).hasAnyRole("ADMIN", "AUDITOR")
+                .requestMatchers(new AntPathRequestMatcher("/api/report/**")).hasAnyRole("ADMIN", "AUDITOR")
+
                 // Cualquier otra ruta bajo /api requiere, al menos, un JWT válido.
                 .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
 
@@ -150,6 +168,24 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    /**
+     * Configuracion CORS para el frontend Angular local (ng serve en
+     * localhost:4200). Permite explicitamente el header "Authorization"
+     * (donde MSAL adjunta el Bearer token) y todos los metodos HTTP que usan
+     * los distintos endpoints del BFF.
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     /**

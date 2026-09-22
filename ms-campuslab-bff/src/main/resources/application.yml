@@ -40,6 +40,8 @@ campuslab:
   services:
     catalog-base-url: ${CATALOG_SERVICE_URL:http://localhost:8081}
     bookings-base-url: ${BOOKINGS_SERVICE_URL:http://localhost:8082}
+    audit-base-url: ${AUDIT_SERVICE_URL:http://localhost:8084}
+    report-base-url: ${REPORT_SERVICE_URL:http://localhost:8085}
 
 management:
   endpoints:

@@ -35,4 +35,20 @@ public class GatewayConfig {
                 .route(path("/api/bookings/**"), http(bookingsBaseUrl))
                 .build();
     }
+
+    @Bean
+    public RouterFunction<ServerResponse> auditRoute(
+            @Value("${campuslab.services.audit-base-url}") String auditBaseUrl) {
+        return route("audit_service")
+                .route(path("/api/audit/**"), http(auditBaseUrl))
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> reportRoute(
+            @Value("${campuslab.services.report-base-url}") String reportBaseUrl) {
+        return route("report_service")
+                .route(path("/api/report/**"), http(reportBaseUrl))
+                .build();
+    }
 }
