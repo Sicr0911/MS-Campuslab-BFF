@@ -98,8 +98,10 @@ public class SecurityConfig {
                 .requestMatchers(new AntPathRequestMatcher("/actuator/info")).permitAll()
 
                 // --- Autorización por rol de negocio ---
-                // Ruta de prueba para verificar rapidamente la validacion de JWT +
-                // rol ADMIN (ver SampleController#adminPing).
+                // /api/admin/** cubre tanto la ruta de prueba (SampleController#adminPing)
+                // como las reenviadas a ms-campuslab-rabbitmq-admin y ms-campuslab-kafka-admin
+                // (/api/admin/rabbitmq/**, /api/admin/kafka/**, ver GatewayConfig): todo
+                // exclusivo de Admin.
                 .requestMatchers(new AntPathRequestMatcher("/api/admin/**")).hasRole("ADMIN")
 
                 // Administración de laboratorio: solo Admin.

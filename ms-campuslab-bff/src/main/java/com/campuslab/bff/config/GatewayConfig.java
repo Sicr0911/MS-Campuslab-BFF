@@ -51,4 +51,20 @@ public class GatewayConfig {
                 .route(path("/api/report/**"), http(reportBaseUrl))
                 .build();
     }
+
+    @Bean
+    public RouterFunction<ServerResponse> rabbitmqAdminRoute(
+            @Value("${campuslab.services.rabbitmq-admin-base-url}") String rabbitmqAdminBaseUrl) {
+        return route("rabbitmq_admin_service")
+                .route(path("/api/admin/rabbitmq/**"), http(rabbitmqAdminBaseUrl))
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> kafkaAdminRoute(
+            @Value("${campuslab.services.kafka-admin-base-url}") String kafkaAdminBaseUrl) {
+        return route("kafka_admin_service")
+                .route(path("/api/admin/kafka/**"), http(kafkaAdminBaseUrl))
+                .build();
+    }
 }
