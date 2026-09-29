@@ -119,26 +119,30 @@ public class SecurityConfig {
                 .requestMatchers(new AntPathRequestMatcher("/api/v1/auditoria/**")).hasAnyRole("ADMIN", "AUDITOR")
 
                 // --- Rutas reenviadas por el gateway a los microservicios de dominio ---
+                // Roles del caso CampusLab: Admin, Tecnico, Estudiante, Auditor (no existe
+                // "Docente" en el enunciado; se elimino un rol que se habia colado de una
+                // version anterior).
+                //
                 // Catalogo (ms-campuslab-catalog): consulta abierta a cualquier rol
                 // academico; alta y modificacion de stock/cupo reservada a Admin/Tecnico.
                 .requestMatchers(HttpMethod.GET, "/api/catalog/**")
-                    .hasAnyRole("ADMIN", "TECNICO", "ESTUDIANTE", "DOCENTE")
+                    .hasAnyRole("ADMIN", "TECNICO", "ESTUDIANTE")
                 .requestMatchers(new AntPathRequestMatcher("/api/catalog/**")).hasAnyRole("ADMIN", "TECNICO")
 
                 // Reservas (ms-campuslab-bookings): mismo criterio que las rutas de
                 // referencia /api/v1/reservas/** de mas arriba.
                 .requestMatchers(HttpMethod.GET, "/api/bookings/**")
-                    .hasAnyRole("ADMIN", "TECNICO", "ESTUDIANTE", "DOCENTE")
+                    .hasAnyRole("ADMIN", "TECNICO", "ESTUDIANTE")
                 .requestMatchers(HttpMethod.POST, "/api/bookings/**")
                     .hasAnyRole("ADMIN", "ESTUDIANTE")
                 .requestMatchers(HttpMethod.PUT, "/api/bookings/**")
-                    .hasAnyRole("ADMIN", "TECNICO", "ESTUDIANTE", "DOCENTE")
+                    .hasAnyRole("ADMIN", "TECNICO", "ESTUDIANTE")
 
-                // Auditoria (ms-campuslab-audit) y reportes/KPIs (ms-campuslab-report):
-                // ambos microservicios ya exigen el mismo rol internamente, esto es
-                // ademas defensa en profundidad a nivel de gateway.
+                // Auditoria (ms-campuslab-audit): Admin y Auditor, segun el caso.
                 .requestMatchers(new AntPathRequestMatcher("/api/audit/**")).hasAnyRole("ADMIN", "AUDITOR")
-                .requestMatchers(new AntPathRequestMatcher("/api/report/**")).hasAnyRole("ADMIN", "AUDITOR")
+                // Reportes/KPIs (ms-campuslab-report): el caso lo restringe solo a Admin
+                // (a diferencia de auditoria, que si incluye al Auditor).
+                .requestMatchers(new AntPathRequestMatcher("/api/report/**")).hasRole("ADMIN")
 
                 // Cualquier otra ruta bajo /api requiere, al menos, un JWT válido.
                 .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
