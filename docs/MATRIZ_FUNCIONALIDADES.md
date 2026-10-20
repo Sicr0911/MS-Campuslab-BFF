@@ -97,14 +97,14 @@ Todos los cambios de la EP3 están en la rama `ep3/entrega` de cada repositorio.
 
 | Repositorio | Commit EP3 | Rama | Pull Request |
 |---|---|---|---|
-| ms-campuslab-notify | [9a9c689](https://github.com/Sicr0911/ms-campuslab-notify/commit/9a9c689) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-notify/tree/ep3/entrega) | _pendiente_ |
-| ms-campuslab-rabbitmq-admin | [5179587](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/5179587) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/tree/ep3/entrega) | _pendiente_ |
-| ms-campuslab-report | [aed8ace](https://github.com/Sicr0911/ms-campuslab-report/commit/aed8ace) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-report/tree/ep3/entrega) | _pendiente_ |
-| ms-campuslab-audit | [beabe6b](https://github.com/Sicr0911/ms-campuslab-audit/commit/beabe6b) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-audit/tree/ep3/entrega) | _pendiente_ |
-| ms-campuslab-catalog | [4b620ad](https://github.com/TomasZamora10/ms-campuslab-catalog/commit/4b620ad) | [ep3/entrega](https://github.com/TomasZamora10/ms-campuslab-catalog/tree/ep3/entrega) | _pendiente_ |
-| ms-campuslab-kafka-admin | [7ca2f64](https://github.com/Sicr0911/ms-campuslab-kafka-admin/commit/7ca2f64) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-kafka-admin/tree/ep3/entrega) | _pendiente_ |
-| MS-Campuslab-BFF | [2db5135](https://github.com/Sicr0911/MS-Campuslab-BFF/commit/2db5135) | [ep3/entrega](https://github.com/Sicr0911/MS-Campuslab-BFF/tree/ep3/entrega) | _pendiente_ |
-| Front-CampusLab | [86f684d](https://github.com/TomasZamora10/Front-CampusLab/commit/86f684d) | [ep3/entrega](https://github.com/TomasZamora10/Front-CampusLab/tree/ep3/entrega) | _pendiente_ |
+| ms-campuslab-notify | [9a9c689](https://github.com/Sicr0911/ms-campuslab-notify/commit/9a9c689) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-notify/tree/ep3/entrega) | [#1](https://github.com/Sicr0911/ms-campuslab-notify/pull/1) |
+| ms-campuslab-rabbitmq-admin | [5179587](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/5179587) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/tree/ep3/entrega) | [#1](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/pull/1) |
+| ms-campuslab-report | [aed8ace](https://github.com/Sicr0911/ms-campuslab-report/commit/aed8ace) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-report/tree/ep3/entrega) | [#1](https://github.com/Sicr0911/ms-campuslab-report/pull/1) |
+| ms-campuslab-audit | [beabe6b](https://github.com/Sicr0911/ms-campuslab-audit/commit/beabe6b) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-audit/tree/ep3/entrega) | [#1](https://github.com/Sicr0911/ms-campuslab-audit/pull/1) |
+| ms-campuslab-catalog | [4b620ad](https://github.com/TomasZamora10/ms-campuslab-catalog/commit/4b620ad) | [ep3/entrega](https://github.com/TomasZamora10/ms-campuslab-catalog/tree/ep3/entrega) | [#1](https://github.com/TomasZamora10/ms-campuslab-catalog/pull/1) |
+| ms-campuslab-kafka-admin | [7ca2f64](https://github.com/Sicr0911/ms-campuslab-kafka-admin/commit/7ca2f64) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-kafka-admin/tree/ep3/entrega) | [#1](https://github.com/Sicr0911/ms-campuslab-kafka-admin/pull/1) |
+| MS-Campuslab-BFF | [2db5135](https://github.com/Sicr0911/MS-Campuslab-BFF/commit/2db5135) | [ep3/entrega](https://github.com/Sicr0911/MS-Campuslab-BFF/tree/ep3/entrega) | [#1](https://github.com/Sicr0911/MS-Campuslab-BFF/pull/1) |
+| Front-CampusLab | [86f684d](https://github.com/TomasZamora10/Front-CampusLab/commit/86f684d) | [ep3/entrega](https://github.com/TomasZamora10/Front-CampusLab/tree/ep3/entrega) | [#1](https://github.com/TomasZamora10/Front-CampusLab/pull/1) |
 
 ## Cómo verificar
 
