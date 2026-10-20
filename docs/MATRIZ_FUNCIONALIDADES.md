@@ -7,8 +7,10 @@ expone cada microservicio; desde el frontend se consumen a través del BFF
 
 **Estados:** ✅ Implementada · 🟡 Parcial · ❌ No implementada
 
-> Columna **Commit / PR**: completar con el enlace al commit o Pull Request
-> una vez subidos los cambios a GitHub.
+> Columna **Commit / PR**: **EP3** = commit de esta entrega (rama
+> `ep3/entrega`, ver [Pull Requests](#pull-requests-de-la-entrega));
+> **main** = la funcionalidad ya existía en `main` antes de la EP3 y se
+> enlaza el commit vigente de esa rama.
 
 ## Repositorios
 
@@ -44,49 +46,65 @@ de eventos que leen auditoría y reportes.
 | # | Funcionalidad | Estado | Microservicio | Evidencia verificable | Commit / PR |
 |---|---|---|---|---|---|
 | **Seguridad y acceso** |||||
-| 1 | Login con Azure AD (MSAL) y rutas protegidas | ✅ | Front-CampusLab | `src/app/app.routes.ts` (`MsalGuard`) | |
-| 2 | Validación de JWT de Azure AD (issuer + audience) y roles | ✅ | ms-campuslab-bff | `SecurityConfig`, `AudienceValidator`, `AzureAdJwtAuthenticationConverter` | |
-| 3 | Enrutamiento del BFF hacia los microservicios | ✅ | ms-campuslab-bff | `GatewayConfig`: `/api/catalog/**`, `/api/bookings/**`, `/api/audit/**`, `/api/report/**`, `/api/admin/rabbitmq/**`, `/api/admin/kafka/**` | |
-| 4 | Autorización por rol en cada microservicio | ✅ | todos los backend | `@PreAuthorize` en los controllers (ADMIN, AUDITOR, TECNICO...) | |
+| 1 | Login con Azure AD (MSAL) y rutas protegidas | ✅ | Front-CampusLab | `src/app/app.routes.ts` (`MsalGuard`) | main [a7d6307](https://github.com/TomasZamora10/Front-CampusLab/commit/a7d6307) |
+| 2 | Validación de JWT de Azure AD (issuer + audience) y roles | ✅ | ms-campuslab-bff | `SecurityConfig`, `AudienceValidator`, `AzureAdJwtAuthenticationConverter` | main [6217da6](https://github.com/Sicr0911/MS-Campuslab-BFF/commit/6217da6) |
+| 3 | Enrutamiento del BFF hacia los microservicios | ✅ | ms-campuslab-bff | `GatewayConfig`: `/api/catalog/**`, `/api/bookings/**`, `/api/audit/**`, `/api/report/**`, `/api/admin/rabbitmq/**`, `/api/admin/kafka/**` | main [6217da6](https://github.com/Sicr0911/MS-Campuslab-BFF/commit/6217da6) |
+| 4 | Autorización por rol en cada microservicio | ✅ | todos los backend | `@PreAuthorize` en los controllers (ADMIN, AUDITOR, TECNICO...) | main (cada repo); probado en EP3 [2db5135](https://github.com/Sicr0911/MS-Campuslab-BFF/commit/2db5135) |
 | **Catálogo** |||||
-| 5 | Listar / ver recursos (salas, equipos) | ✅ | ms-campuslab-catalog | `GET /api/catalog/resources`, `GET /api/catalog/resources/{id}` | |
-| 6 | Crear recurso | ✅ | ms-campuslab-catalog | `POST /api/catalog/resources` | |
-| 7 | Actualizar stock / cupo con validación | ✅ | ms-campuslab-catalog | `PUT /api/catalog/resources/{id}` (`@Valid StockUpdateRequest`) | |
-| 8 | Alerta de stock agotado por RabbitMQ | ✅ | ms-campuslab-catalog → ms-campuslab-notify | `PUT /api/catalog/resources/{id}` con stock 0 → `cmd.topic` / `email.stock-agotado` → binding `email.*` (`RabbitMqConfig#emailAlertBinding`) → `q.cmd.email`; `MsCampuslabCatalogApplicationTests`, `EmailNotificationListenerTest` | |
+| 5 | Listar / ver recursos (salas, equipos) | ✅ | ms-campuslab-catalog | `GET /api/catalog/resources`, `GET /api/catalog/resources/{id}` | main [863dff8](https://github.com/TomasZamora10/ms-campuslab-catalog/commit/863dff8) |
+| 6 | Crear recurso | ✅ | ms-campuslab-catalog | `POST /api/catalog/resources` | main [863dff8](https://github.com/TomasZamora10/ms-campuslab-catalog/commit/863dff8) |
+| 7 | Actualizar stock / cupo con validación | ✅ | ms-campuslab-catalog | `PUT /api/catalog/resources/{id}` (`@Valid StockUpdateRequest`) | main [863dff8](https://github.com/TomasZamora10/ms-campuslab-catalog/commit/863dff8) |
+| 8 | Alerta de stock agotado por RabbitMQ | ✅ | ms-campuslab-catalog → ms-campuslab-notify | `PUT /api/catalog/resources/{id}` con stock 0 → `cmd.topic` / `email.stock-agotado` → binding `email.*` (`RabbitMqConfig#emailAlertBinding`) → `q.cmd.email`; `MsCampuslabCatalogApplicationTests`, `EmailNotificationListenerTest` | EP3 [9a9c689](https://github.com/Sicr0911/ms-campuslab-notify/commit/9a9c689), [4b620ad](https://github.com/TomasZamora10/ms-campuslab-catalog/commit/4b620ad) |
 | **Reservas** |||||
-| 9 | Crear, ver y listar reservas con filtros y paginación | ✅ | ms-campuslab-bookings | `POST /api/bookings`, `GET /api/bookings/{id}`, `GET /api/bookings?estado=&recursoId=&page=` | |
-| 10 | Máquina de estados y regla crítica (EN_USO solo si fue APROBADA por TECNICO/ADMIN) | ✅ | ms-campuslab-bookings | `PUT /api/bookings/{id}/status` → 409; `ReservaServiceImplTest`; constraint `CK_RESERVAS_EN_USO_REQ_APROB` | |
-| 11 | Verificación de stock contra catálogo antes de aprobar | ✅ | ms-campuslab-bookings | `CatalogClientImpl` | |
-| 12 | Publicación de comandos asíncronos a RabbitMQ | ✅ | ms-campuslab-bookings | `ReservaEventPublisher` → `cmd.direct` (`email.send`, `prep.ticket`, `voucher.gen`) | |
-| 13 | Publicación del historial de eventos a Kafka | ✅ | ms-campuslab-bookings | `ReservaKafkaEventPublisher` → `bookings.events` | |
+| 9 | Crear, ver y listar reservas con filtros y paginación | ✅ | ms-campuslab-bookings | `POST /api/bookings`, `GET /api/bookings/{id}`, `GET /api/bookings?estado=&recursoId=&page=` | main [af70394](https://github.com/Sicr0911/MS-Campuslab-Bookings/commit/af70394) |
+| 10 | Máquina de estados y regla crítica (EN_USO solo si fue APROBADA por TECNICO/ADMIN) | ✅ | ms-campuslab-bookings | `PUT /api/bookings/{id}/status` → 409; `ReservaServiceImplTest`; constraint `CK_RESERVAS_EN_USO_REQ_APROB` | main [af70394](https://github.com/Sicr0911/MS-Campuslab-Bookings/commit/af70394) |
+| 11 | Verificación de stock contra catálogo antes de aprobar | ✅ | ms-campuslab-bookings | `CatalogClientImpl` | main [af70394](https://github.com/Sicr0911/MS-Campuslab-Bookings/commit/af70394) |
+| 12 | Publicación de comandos asíncronos a RabbitMQ | ✅ | ms-campuslab-bookings | `ReservaEventPublisher` → `cmd.direct` (`email.send`, `prep.ticket`, `voucher.gen`) | main [af70394](https://github.com/Sicr0911/MS-Campuslab-Bookings/commit/af70394) |
+| 13 | Publicación del historial de eventos a Kafka | ✅ | ms-campuslab-bookings | `ReservaKafkaEventPublisher` → `bookings.events` | main [af70394](https://github.com/Sicr0911/MS-Campuslab-Bookings/commit/af70394) |
 | **Notificaciones, tickets y documentos (RabbitMQ)** |||||
-| 14 | Consumidor de notificaciones email/push | ✅ | ms-campuslab-notify | `EmailNotificationListener` (`q.cmd.email`) | |
-| 15 | Consumidor de tickets de preparación | ✅ | ms-campuslab-notify | `PreparationTicketListener` (`q.cmd.prep`) | |
-| 16 | Consumidor de generación de documentos (vale / acta) | 🟡 | ms-campuslab-notify | `VoucherGenerationListener` (`q.cmd.voucher`); el PDF se simula con un log, no se genera un archivo | |
-| 17 | ACK explícito (modo manual) | ✅ | ms-campuslab-notify | `acknowledge-mode: manual`; `basicAck` / `basicNack` en cada listener; `EmailNotificationListenerTest` | |
-| 18 | DLQ y registro del fallo en logs | ✅ | ms-campuslab-notify | `basicNack(tag, false, false)` → `cmd.dlx` → `q.cmd.*.dlq`; `log.error` con cola, deliveryTag, DLQ y cuerpo del mensaje | |
-| 19 | Declaración centralizada de Queue/Exchange/Binding (notificaciones, tickets, vouchers, DLQ) con nombres desde `application.yml` | ✅ | ms-campuslab-notify | `RabbitMqConfig` + `NotifyRabbitProperties` (`campuslab.rabbitmq.*`); `MsCampuslabNotifyApplicationTests` | |
-| 20 | Idempotencia por `eventId` | 🟡 | ms-campuslab-notify | `ProcessedEventTracker` (en memoria: se pierde al reiniciar y no se comparte entre réplicas) | |
-| 21 | Envío real de email/push | ❌ | ms-campuslab-notify | Fuera de alcance: se simula con un log | |
+| 14 | Consumidor de notificaciones email/push | ✅ | ms-campuslab-notify | `EmailNotificationListener` (`q.cmd.email`) | EP3 [9a9c689](https://github.com/Sicr0911/ms-campuslab-notify/commit/9a9c689) |
+| 15 | Consumidor de tickets de preparación | ✅ | ms-campuslab-notify | `PreparationTicketListener` (`q.cmd.prep`) | EP3 [9a9c689](https://github.com/Sicr0911/ms-campuslab-notify/commit/9a9c689) |
+| 16 | Consumidor de generación de documentos (vale / acta) | 🟡 | ms-campuslab-notify | `VoucherGenerationListener` (`q.cmd.voucher`); el PDF se simula con un log, no se genera un archivo | EP3 [9a9c689](https://github.com/Sicr0911/ms-campuslab-notify/commit/9a9c689) |
+| 17 | ACK explícito (modo manual) | ✅ | ms-campuslab-notify | `acknowledge-mode: manual`; `basicAck` / `basicNack` en cada listener; `EmailNotificationListenerTest` | EP3 [9a9c689](https://github.com/Sicr0911/ms-campuslab-notify/commit/9a9c689) |
+| 18 | DLQ y registro del fallo en logs | ✅ | ms-campuslab-notify | `basicNack(tag, false, false)` → `cmd.dlx` → `q.cmd.*.dlq`; `log.error` con cola, deliveryTag, DLQ y cuerpo del mensaje | EP3 [9a9c689](https://github.com/Sicr0911/ms-campuslab-notify/commit/9a9c689) |
+| 19 | Declaración centralizada de Queue/Exchange/Binding (notificaciones, tickets, vouchers, DLQ) con nombres desde `application.yml` | ✅ | ms-campuslab-notify | `RabbitMqConfig` + `NotifyRabbitProperties` (`campuslab.rabbitmq.*`); `MsCampuslabNotifyApplicationTests` | EP3 [9a9c689](https://github.com/Sicr0911/ms-campuslab-notify/commit/9a9c689) |
+| 20 | Idempotencia por `eventId` | 🟡 | ms-campuslab-notify | `ProcessedEventTracker` (en memoria: se pierde al reiniciar y no se comparte entre réplicas) | main [efe08d3](https://github.com/Sicr0911/ms-campuslab-notify/commit/efe08d3) |
+| 21 | Envío real de email/push | ❌ | ms-campuslab-notify | Fuera de alcance: se simula con un log | — |
 | **Administración de RabbitMQ** |||||
-| 22 | Estado del broker y listado de colas | ✅ | ms-campuslab-rabbitmq-admin | `GET /api/admin/rabbitmq/overview`, `GET /api/admin/rabbitmq/queues` | |
-| 23 | Capa de servicio con la lógica de crear/actualizar/eliminar | ✅ | ms-campuslab-rabbitmq-admin | `RabbitAdminService`; `RabbitAdminServiceTest` | |
-| 24 | Administrar colas (crear, actualizar, eliminar) | ✅ | ms-campuslab-rabbitmq-admin | `POST /queues`, `PUT /queues/{name}`, `DELETE /queues/{name}?ifEmpty=` | |
-| 25 | Administrar exchanges (listar, crear, actualizar, eliminar) | ✅ | ms-campuslab-rabbitmq-admin | `GET/POST /exchanges`, `PUT /exchanges/{name}`, `DELETE /exchanges/{name}?ifUnused=` | |
-| 26 | Administrar bindings (listar, crear, eliminar) | ✅ | ms-campuslab-rabbitmq-admin | `GET/POST /bindings`, `DELETE /bindings?exchange=&queue=&routingKey=` | |
-| 27 | Validación de entradas (`@NotBlank`, `@NotNull`, `@Pattern`, `@Valid`) | ✅ | ms-campuslab-rabbitmq-admin | `QueueRequestDTO`, `ExchangeRequestDTO`, `BindingRequestDTO`; 400 con detalle por campo; `RabbitMqAdminControllerTest` | |
-| 28 | Protección de la topología productiva (no se modifica ni elimina) | ✅ | ms-campuslab-rabbitmq-admin | `campuslab.rabbitmq.protected-resources` → 409 | |
-| 29 | Panel de administración RabbitMQ en el frontend (overview, colas, exchanges, bindings) | ✅ | Front-CampusLab | Ruta `/admin/rabbitmq` (solo ADMIN): `pages/rabbitmq/`, `RabbitmqAdminService`; `rabbitmq.spec.ts` | |
-| 29b | Topología RabbitMQ versionada | ✅ | infra (repo BFF) | `infra/mq/definitions.json` (exchanges, colas, DLQ y bindings), igual a la que declara `RabbitMqConfig` de notify | |
+| 22 | Estado del broker y listado de colas | ✅ | ms-campuslab-rabbitmq-admin | `GET /api/admin/rabbitmq/overview`, `GET /api/admin/rabbitmq/queues` | main [dc1dd4a](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/dc1dd4a); EP3 [5179587](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/5179587) |
+| 23 | Capa de servicio con la lógica de crear/actualizar/eliminar | ✅ | ms-campuslab-rabbitmq-admin | `RabbitAdminService`; `RabbitAdminServiceTest` | EP3 [5179587](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/5179587) |
+| 24 | Administrar colas (crear, actualizar, eliminar) | ✅ | ms-campuslab-rabbitmq-admin | `POST /queues`, `PUT /queues/{name}`, `DELETE /queues/{name}?ifEmpty=` | EP3 [5179587](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/5179587) |
+| 25 | Administrar exchanges (listar, crear, actualizar, eliminar) | ✅ | ms-campuslab-rabbitmq-admin | `GET/POST /exchanges`, `PUT /exchanges/{name}`, `DELETE /exchanges/{name}?ifUnused=` | EP3 [5179587](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/5179587) |
+| 26 | Administrar bindings (listar, crear, eliminar) | ✅ | ms-campuslab-rabbitmq-admin | `GET/POST /bindings`, `DELETE /bindings?exchange=&queue=&routingKey=` | EP3 [5179587](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/5179587) |
+| 27 | Validación de entradas (`@NotBlank`, `@NotNull`, `@Pattern`, `@Valid`) | ✅ | ms-campuslab-rabbitmq-admin | `QueueRequestDTO`, `ExchangeRequestDTO`, `BindingRequestDTO`; 400 con detalle por campo; `RabbitMqAdminControllerTest` | EP3 [5179587](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/5179587) |
+| 28 | Protección de la topología productiva (no se modifica ni elimina) | ✅ | ms-campuslab-rabbitmq-admin | `campuslab.rabbitmq.protected-resources` → 409 | EP3 [5179587](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/5179587) |
+| 29 | Panel de administración RabbitMQ en el frontend (overview, colas, exchanges, bindings) | ✅ | Front-CampusLab | Ruta `/admin/rabbitmq` (solo ADMIN): `pages/rabbitmq/`, `RabbitmqAdminService`; `rabbitmq.spec.ts` | EP3 [86f684d](https://github.com/TomasZamora10/Front-CampusLab/commit/86f684d) |
+| 29b | Topología RabbitMQ versionada | ✅ | infra (repo BFF) | `infra/mq/definitions.json` (exchanges, colas, DLQ y bindings), igual a la que declara `RabbitMqConfig` de notify | EP3 [2db5135](https://github.com/Sicr0911/MS-Campuslab-BFF/commit/2db5135) |
 | **Auditoría y reportes (Kafka)** |||||
-| 30 | Timeline de auditoría por reserva y búsqueda con filtros | ✅ | ms-campuslab-audit | `GET /api/audit/reservas/{reservaId}`, `GET /api/audit` | |
-| 31 | Consumo idempotente de `bookings.events` con DLT | ✅ | ms-campuslab-audit | `BookingsEventListener`, `KafkaConsumerConfig` (`bookings.events.audit-svc.DLT`); `MsCampuslabAuditApplicationTests` | |
-| 32 | KPIs y recursos más reservados por rango | ✅ | ms-campuslab-report | `GET /api/report/kpis?range=last24h`, `GET /api/report/top-resources?range=last7d`; `RangeParserTest` | |
-| 33 | Administración de Kafka (topics, consumer groups) | ✅ | ms-campuslab-kafka-admin | `GET /api/admin/kafka/topics`, `GET /api/admin/kafka/consumer-groups` | |
+| 30 | Timeline de auditoría por reserva y búsqueda con filtros | ✅ | ms-campuslab-audit | `GET /api/audit/reservas/{reservaId}`, `GET /api/audit` | main [be6884e](https://github.com/Sicr0911/ms-campuslab-audit/commit/be6884e) |
+| 31 | Consumo idempotente de `bookings.events` con DLT | ✅ | ms-campuslab-audit | `BookingsEventListener`, `KafkaConsumerConfig` (`bookings.events.audit-svc.DLT`); `MsCampuslabAuditApplicationTests` | main [be6884e](https://github.com/Sicr0911/ms-campuslab-audit/commit/be6884e); tests EP3 [beabe6b](https://github.com/Sicr0911/ms-campuslab-audit/commit/beabe6b) |
+| 32 | KPIs y recursos más reservados por rango | ✅ | ms-campuslab-report | `GET /api/report/kpis?range=last24h`, `GET /api/report/top-resources?range=last7d`; `RangeParserTest` | main [465f734](https://github.com/Sicr0911/ms-campuslab-report/commit/465f734); tests EP3 [aed8ace](https://github.com/Sicr0911/ms-campuslab-report/commit/aed8ace) |
+| 33 | Administración de Kafka (topics, consumer groups) | ✅ | ms-campuslab-kafka-admin | `GET /api/admin/kafka/topics`, `GET /api/admin/kafka/consumer-groups` | main [e5f35c9](https://github.com/Sicr0911/ms-campuslab-kafka-admin/commit/e5f35c9); tests EP3 [7ca2f64](https://github.com/Sicr0911/ms-campuslab-kafka-admin/commit/7ca2f64) |
 | **Pruebas** |||||
-| 34 | Prueba de carga de contexto (`@SpringBootTest`) | ✅ | todos los backend | `src/test/java/**/*ApplicationTests.java` en notify, rabbitmq-admin, report, audit, catalog, kafka-admin y bff (sin infraestructura externa: H2, mocks y listeners desactivados) | |
-| 35 | Pruebas unitarias de reglas de negocio | ✅ | bookings, rabbitmq-admin, notify, report, kafka-admin | `ReservaServiceImplTest`, `RabbitAdminServiceTest`, `EmailNotificationListenerTest`, `RangeParserTest`, `KafkaAdminServiceTest` | |
-| 36 | Pruebas de seguridad por rol (401/403) | ✅ | bff, rabbitmq-admin, kafka-admin | `CampuslabBffApplicationTests`, `RabbitMqAdminControllerTest`, `MsCampuslabKafkaAdminApplicationTests` | |
+| 34 | Prueba de carga de contexto (`@SpringBootTest`) | ✅ | todos los backend | `src/test/java/**/*ApplicationTests.java` en notify, rabbitmq-admin, report, audit, catalog, kafka-admin y bff (sin infraestructura externa: H2, mocks y listeners desactivados) | EP3 [9a9c689](https://github.com/Sicr0911/ms-campuslab-notify/commit/9a9c689), [5179587](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/5179587), [aed8ace](https://github.com/Sicr0911/ms-campuslab-report/commit/aed8ace), [beabe6b](https://github.com/Sicr0911/ms-campuslab-audit/commit/beabe6b), [4b620ad](https://github.com/TomasZamora10/ms-campuslab-catalog/commit/4b620ad), [7ca2f64](https://github.com/Sicr0911/ms-campuslab-kafka-admin/commit/7ca2f64), [2db5135](https://github.com/Sicr0911/MS-Campuslab-BFF/commit/2db5135) |
+| 35 | Pruebas unitarias de reglas de negocio | ✅ | bookings, rabbitmq-admin, notify, report, kafka-admin | `ReservaServiceImplTest`, `RabbitAdminServiceTest`, `EmailNotificationListenerTest`, `RangeParserTest`, `KafkaAdminServiceTest` | main [af70394](https://github.com/Sicr0911/MS-Campuslab-Bookings/commit/af70394); EP3 [5179587](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/5179587), [9a9c689](https://github.com/Sicr0911/ms-campuslab-notify/commit/9a9c689), [aed8ace](https://github.com/Sicr0911/ms-campuslab-report/commit/aed8ace), [7ca2f64](https://github.com/Sicr0911/ms-campuslab-kafka-admin/commit/7ca2f64) |
+| 36 | Pruebas de seguridad por rol (401/403) | ✅ | bff, rabbitmq-admin, kafka-admin | `CampuslabBffApplicationTests`, `RabbitMqAdminControllerTest`, `MsCampuslabKafkaAdminApplicationTests` | EP3 [2db5135](https://github.com/Sicr0911/MS-Campuslab-BFF/commit/2db5135), [5179587](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/5179587), [7ca2f64](https://github.com/Sicr0911/ms-campuslab-kafka-admin/commit/7ca2f64) |
+| 37 | Pruebas del frontend (componentes con MSAL y HTTP simulados) | ✅ | Front-CampusLab | `npm test`: 11 tests en 9 specs; `src/testing/providers-de-prueba.ts` | EP3 [86f684d](https://github.com/TomasZamora10/Front-CampusLab/commit/86f684d) |
+
+## Pull Requests de la entrega
+
+Todos los cambios de la EP3 están en la rama `ep3/entrega` de cada repositorio.
+
+| Repositorio | Commit EP3 | Rama | Pull Request |
+|---|---|---|---|
+| ms-campuslab-notify | [9a9c689](https://github.com/Sicr0911/ms-campuslab-notify/commit/9a9c689) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-notify/tree/ep3/entrega) | _pendiente_ |
+| ms-campuslab-rabbitmq-admin | [5179587](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/commit/5179587) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-rabbitmq-admin/tree/ep3/entrega) | _pendiente_ |
+| ms-campuslab-report | [aed8ace](https://github.com/Sicr0911/ms-campuslab-report/commit/aed8ace) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-report/tree/ep3/entrega) | _pendiente_ |
+| ms-campuslab-audit | [beabe6b](https://github.com/Sicr0911/ms-campuslab-audit/commit/beabe6b) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-audit/tree/ep3/entrega) | _pendiente_ |
+| ms-campuslab-catalog | [4b620ad](https://github.com/TomasZamora10/ms-campuslab-catalog/commit/4b620ad) | [ep3/entrega](https://github.com/TomasZamora10/ms-campuslab-catalog/tree/ep3/entrega) | _pendiente_ |
+| ms-campuslab-kafka-admin | [7ca2f64](https://github.com/Sicr0911/ms-campuslab-kafka-admin/commit/7ca2f64) | [ep3/entrega](https://github.com/Sicr0911/ms-campuslab-kafka-admin/tree/ep3/entrega) | _pendiente_ |
+| MS-Campuslab-BFF | [2db5135](https://github.com/Sicr0911/MS-Campuslab-BFF/commit/2db5135) | [ep3/entrega](https://github.com/Sicr0911/MS-Campuslab-BFF/tree/ep3/entrega) | _pendiente_ |
+| Front-CampusLab | [86f684d](https://github.com/TomasZamora10/Front-CampusLab/commit/86f684d) | [ep3/entrega](https://github.com/TomasZamora10/Front-CampusLab/tree/ep3/entrega) | _pendiente_ |
 
 ## Cómo verificar
 
