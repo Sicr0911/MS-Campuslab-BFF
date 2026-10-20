@@ -1,0 +1,36 @@
+{
+  "vhosts": [
+    { "name": "/" }
+  ],
+  "exchanges": [
+    { "name": "cmd.direct", "vhost": "/", "type": "direct", "durable": true, "auto_delete": false, "internal": false, "arguments": {} },
+    { "name": "cmd.topic",  "vhost": "/", "type": "topic",  "durable": true, "auto_delete": false, "internal": false, "arguments": {} },
+    { "name": "cmd.dlx",    "vhost": "/", "type": "direct", "durable": true, "auto_delete": false, "internal": false, "arguments": {} }
+  ],
+  "queues": [
+    {
+      "name": "q.cmd.email", "vhost": "/", "durable": true, "auto_delete": false,
+      "arguments": { "x-dead-letter-exchange": "cmd.dlx", "x-dead-letter-routing-key": "q.cmd.email.dlq" }
+    },
+    {
+      "name": "q.cmd.prep", "vhost": "/", "durable": true, "auto_delete": false,
+      "arguments": { "x-dead-letter-exchange": "cmd.dlx", "x-dead-letter-routing-key": "q.cmd.prep.dlq" }
+    },
+    {
+      "name": "q.cmd.voucher", "vhost": "/", "durable": true, "auto_delete": false,
+      "arguments": { "x-dead-letter-exchange": "cmd.dlx", "x-dead-letter-routing-key": "q.cmd.voucher.dlq" }
+    },
+    { "name": "q.cmd.email.dlq",   "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "q.cmd.prep.dlq",    "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} },
+    { "name": "q.cmd.voucher.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {} }
+  ],
+  "bindings": [
+    { "source": "cmd.direct", "vhost": "/", "destination": "q.cmd.email",   "destination_type": "queue", "routing_key": "email.send",  "arguments": {} },
+    { "source": "cmd.direct", "vhost": "/", "destination": "q.cmd.prep",    "destination_type": "queue", "routing_key": "prep.ticket", "arguments": {} },
+    { "source": "cmd.direct", "vhost": "/", "destination": "q.cmd.voucher", "destination_type": "queue", "routing_key": "voucher.gen", "arguments": {} },
+    { "source": "cmd.topic",  "vhost": "/", "destination": "q.cmd.email",   "destination_type": "queue", "routing_key": "email.*",     "arguments": {} },
+    { "source": "cmd.dlx",    "vhost": "/", "destination": "q.cmd.email.dlq",   "destination_type": "queue", "routing_key": "q.cmd.email.dlq",   "arguments": {} },
+    { "source": "cmd.dlx",    "vhost": "/", "destination": "q.cmd.prep.dlq",    "destination_type": "queue", "routing_key": "q.cmd.prep.dlq",    "arguments": {} },
+    { "source": "cmd.dlx",    "vhost": "/", "destination": "q.cmd.voucher.dlq", "destination_type": "queue", "routing_key": "q.cmd.voucher.dlq", "arguments": {} }
+  ]
+}
