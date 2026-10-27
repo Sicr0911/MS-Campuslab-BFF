@@ -10,10 +10,10 @@
 #   cp .env.example .env    # y completar los valores
 #   docker compose up -d --build
 #
-# Solo el frontend publica un puerto (WEB_PORT, 80 por defecto): nginx
-# reenvia /api/* al BFF por la red interna. El BFF y los microservicios NO
-# quedan expuestos a internet; en particular catalog (sin seguridad propia)
-# solo es alcanzable desde bookings y el BFF.
+# Solo Caddy publica puertos (80 y 443): termina HTTPS y reenvia al
+# frontend (nginx), que a su vez reenvia /api/* al BFF por la red interna.
+# El BFF y los microservicios NO quedan expuestos a internet; en particular
+# catalog (sin seguridad propia) solo es alcanzable desde bookings y el BFF.
 
 x-java: &java
   restart: unless-stopped
@@ -27,12 +27,26 @@ x-health: &health
   start_period: 90s
 
 services:
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?Falta SITE_DOMAIN en .env (ej. 100-53-6-28.sslip.io)}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data        # certificados: se conservan entre reinicios
+      - caddy_config:/config
+    depends_on: [frontend]
+    networks: [campuslab]
+
   frontend:
     build: ../../../Front-CampusLab
     container_name: frontend
     restart: unless-stopped
-    ports:
-      - "${WEB_PORT:-80}:80"
     depends_on:
       ms-campuslab-bff:
         condition: service_healthy
@@ -105,3 +119,7 @@ services:
 networks:
   campuslab:
     name: campuslab
+
+volumes:
+  caddy_data:
+  caddy_config:

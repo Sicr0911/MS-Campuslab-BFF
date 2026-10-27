@@ -1,0 +1,10 @@
+# HTTPS automatico (Let's Encrypt) delante del frontend. Azure AD solo
+# acepta Redirect URIs https (salvo localhost) y MSAL necesita un contexto
+# seguro del navegador, asi que la web no puede servirse por http://IP.
+#
+# SITE_DOMAIN sale del .env, por ejemplo 100-53-6-28.sslip.io (sslip.io
+# resuelve ese nombre a la IP 100.53.6.28, sin comprar dominio).
+{$SITE_DOMAIN} {
+	encode gzip
+	reverse_proxy frontend:80
+}

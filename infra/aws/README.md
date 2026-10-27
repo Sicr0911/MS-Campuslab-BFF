@@ -1,100 +1,133 @@
 # Despliegue en AWS (AWS Academy)
 
+```
+Internet ──443/80──► ec2-apps: caddy (HTTPS) ─► frontend (nginx) ─► ms-campuslab-bff ─► microservicios
+                                                                                     ├─5672/15672─► ec2-mq (RabbitMQ)
+                                                                                     ├─9092──────► ec2-kafka (Kafka)
+                                                                                     └─1521──────► Oracle
+```
+
 ## Instancias
 
-| Instancia | Rol | IP pública (2026-10-26) | Puertos |
+| Instancia | Rol | Tamaño recomendado | Entrantes en su Security Group |
 |---|---|---|---|
-| `ec2-apps` | Frontend, BFF y microservicios (Docker) | `100.53.6.28` | **solo 80** (frontend) abierto a internet; el resto solo interno |
-| `ec2-mq` | RabbitMQ | `100.26.43.133` | 5672 (AMQP), 15672 (Management): solo desde `ec2-apps` |
-| `ec2-kafka` | Kafka | `100.26.47.196` | 9092: solo desde `ec2-apps` |
+| `ec2-apps` | Caddy, frontend, BFF y 7 microservicios (Docker) | **t3.large** (8 GB), disco 30 GB | 22, **80, 443** desde `0.0.0.0/0`. Nada más. |
+| `ec2-mq` | RabbitMQ | t3.small | 5672 y 15672 **desde el SG de `ec2-apps`** |
+| `ec2-kafka` | Kafka | t3.medium | 9092 **desde el SG de `ec2-apps`** |
+| Oracle | Base de datos (catalog, bookings, audit, report) | — | 1521 **desde el SG de `ec2-apps`** |
 
-> **Las IP públicas cambian cada vez que se reinicia el lab** (no hay IP
-> elástica). Las **IP privadas** (`172.31.x.x`, columna "Dirección IPv4
-> privada" en la consola de EC2) no cambian: son las que conviene usar en las
-> variables de entorno de `ec2-apps`.
+> **IP pública:** cambia en cada reinicio del lab. Asignar una **Elastic IP**
+> a `ec2-apps` (EC2 → Elastic IPs → Allocate → Associate) evita tener que
+> actualizar `SITE_DOMAIN` y la Redirect URI de Azure cada vez. Para hablar
+> con `ec2-mq`, `ec2-kafka` y Oracle usar siempre las **IP privadas**
+> (`172.31.x.x`), que no cambian.
 
-> **Security Group de `ec2-apps`:** dejar entrante solo el puerto 80 (y 22
-> para EC2 Instance Connect). Cerrar 8080 y **8081**: catalog no tiene
-> seguridad propia y con el puerto abierto cualquiera podia cambiar el stock
-> sin iniciar sesion. Con [`docker-compose.yml`](docker-compose.yml) esos
-> puertos ya no se publican; nginx (frontend) reenvia `/api/*` al BFF por la
-> red interna de Docker.
+> **Kafka:** `advertised.listeners` de `ec2-kafka` debe anunciar la **IP
+> privada** (`PLAINTEXT://172.31.x.x:9092`). Si anuncia la pública, los
+> clientes se conectan primero bien y luego intentan la IP pública, que el
+> Security Group bloquea.
 
-## Desplegar en `ec2-apps`
+> **Por qué HTTPS:** Azure AD solo acepta Redirect URIs `https://` (salvo
+> localhost) y MSAL necesita un contexto seguro del navegador. Caddy obtiene
+> un certificado de Let's Encrypt para `<ip-con-guiones>.sslip.io`, que
+> resuelve a esa IP sin comprar dominio.
 
-1. Clonar los repositorios uno al lado del otro (rama `ep3/entrega`):
+## 1. Preparar `ec2-apps` (una sola vez)
 
-   ```bash
-   mkdir -p ~/campuslab && cd ~/campuslab
-   for r in TomasZamora10/Front-CampusLab TomasZamora10/ms-campuslab-catalog \
-            Sicr0911/MS-Campuslab-BFF Sicr0911/MS-Campuslab-Bookings Sicr0911/ms-campuslab-notify \
-            Sicr0911/ms-campuslab-rabbitmq-admin Sicr0911/ms-campuslab-audit \
-            Sicr0911/ms-campuslab-report Sicr0911/ms-campuslab-kafka-admin; do
-     git clone -b ep3/entrega https://github.com/$r.git
-   done
-   ```
+Amazon Linux 2023, desde EC2 Instance Connect:
 
-   Para actualizar despues: `git pull` en cada carpeta.
+```bash
+sudo dnf install -y docker git
+sudo systemctl enable --now docker
+sudo usermod -aG docker ec2-user
+sudo mkdir -p /usr/local/lib/docker/cli-plugins
+sudo curl -sSL https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-x86_64 \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+sudo curl -sSL https://github.com/docker/buildx/releases/download/v0.17.1/buildx-v0.17.1.linux-amd64 \
+  -o /usr/local/lib/docker/cli-plugins/docker-buildx
+sudo chmod +x /usr/local/lib/docker/cli-plugins/*
+# 2 GB de swap: compilar 9 imagenes con Maven pide mucha memoria
+sudo dd if=/dev/zero of=/swapfile bs=1M count=2048 && sudo chmod 600 /swapfile \
+  && sudo mkswap /swapfile && sudo swapon /swapfile && echo '/swapfile swap swap defaults 0 0' | sudo tee -a /etc/fstab
+exit   # volver a entrar para que el grupo docker aplique
+```
 
-2. Configurar y levantar:
+## 2. Clonar los repositorios (rama `ep3/entrega`)
 
-   ```bash
-   cd ~/campuslab/MS-Campuslab-BFF/infra/aws
-   cp .env.example .env && nano .env      # IP privadas, credenciales de Oracle y RabbitMQ
-   docker compose up -d --build
-   docker compose ps                      # bff, catalog, bookings y audit deben quedar "healthy"
-   ```
+```bash
+mkdir -p ~/campuslab && cd ~/campuslab
+for r in TomasZamora10/Front-CampusLab TomasZamora10/ms-campuslab-catalog \
+         Sicr0911/MS-Campuslab-BFF Sicr0911/MS-Campuslab-Bookings Sicr0911/ms-campuslab-notify \
+         Sicr0911/ms-campuslab-rabbitmq-admin Sicr0911/ms-campuslab-audit \
+         Sicr0911/ms-campuslab-report Sicr0911/ms-campuslab-kafka-admin; do
+  git clone -b ep3/entrega https://github.com/$r.git
+done
+```
 
-3. En Azure AD → App Registration → Authentication, agregar como Redirect
-   URI (tipo SPA) `http://<IP publica de ec2-apps>` (cambia en cada reinicio
-   del lab).
+Para actualizar después: `for d in ~/campuslab/*/; do git -C "$d" pull; done`.
 
-4. Verificar:
+## 3. Configurar y levantar
 
-   ```bash
-   curl -s localhost:8080/actuator/health                     # {"status":"UP"}
-   docker compose logs ms-campuslab-bookings | grep -i "migrat"  # V2 OUTBOX_RABBIT aplicada
-   docker compose logs ms-campuslab-audit    | grep -i "migrat"  # V2 SOLICITUDES_INFORMACION aplicada
-   ```
+```bash
+cd ~/campuslab/MS-Campuslab-BFF/infra/aws
+cp .env.example .env && nano .env
+COMPOSE_PARALLEL_LIMIT=2 docker compose build   # ~10-15 min la primera vez
+docker compose up -d
+docker compose ps        # bff, catalog, bookings y audit deben quedar "healthy"
+```
 
-   Luego entrar a `http://<IP publica>` con un usuario de cada App Role.
+En `.env` (plantilla: [`.env.example`](.env.example)):
 
-Las migraciones nuevas (Flyway) crean `OUTBOX_RABBIT` (bookings) y
-`SOLICITUDES_INFORMACION` (audit) al arrancar; el usuario de Oracle necesita
-permiso `CREATE TABLE` y `CREATE SEQUENCE`.
+| Variable | Valor |
+|---|---|
+| `SITE_DOMAIN` | IP pública de `ec2-apps` con guiones + `.sslip.io`, ej. `100-53-6-28.sslip.io` |
+| `JAVA_TOOL_OPTIONS` | Memoria de cada JVM (por defecto 256 MB de heap) |
+| `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AUTH_ISSUER_URI` | App Registration de Azure AD |
+| `DB_HOST`, `DB_PORT`, `DB_SERVICE`, `DB_USERNAME`, `DB_PASSWORD` | Oracle (catalog, bookings, audit, report) |
+| `RABBITMQ_HOST`, `RABBITMQ_USERNAME`, `RABBITMQ_PASSWORD` | IP privada y credenciales de `ec2-mq` |
+| `KAFKA_BOOTSTRAP_SERVERS` | `<IP privada de ec2-kafka>:9092` |
 
-## Variables de entorno en `ec2-apps`
+Las migraciones de Flyway crean `OUTBOX_RABBIT` (bookings) y
+`SOLICITUDES_INFORMACION` (audit) al arrancar: el usuario de Oracle necesita
+`CREATE TABLE` y `CREATE SEQUENCE`.
 
-Los `application.yml` traen valores por defecto, pero en EC2 se sobrescriben
-con `infra/aws/.env` (fuera del control de versiones; plantilla en
-[`.env.example`](.env.example)):
+## 4. Azure AD
 
-| Variable | Usada por | Valor |
-|---|---|---|
-| `RABBITMQ_HOST` | catalog, bookings, notify, rabbitmq-admin | IP privada de `ec2-mq` |
-| `RABBITMQ_USERNAME` / `RABBITMQ_PASSWORD` | catalog, bookings, notify, rabbitmq-admin | credenciales del broker |
-| `KAFKA_BOOTSTRAP_SERVERS` | bookings, audit, report, kafka-admin | `<IP privada de ec2-kafka>:9092` |
-| `AUTH_ISSUER_URI` | bookings, audit, report, rabbitmq-admin, kafka-admin | `https://login.microsoftonline.com/<tenant>/v2.0` |
-| `DB_HOST`, `DB_PORT`, `DB_SERVICE`, `DB_USERNAME`, `DB_PASSWORD` | catalog, bookings, audit, report | base de datos Oracle |
+App Registration `6bf386f7-…` → **Authentication** → plataforma
+**Single-page application** → agregar la Redirect URI
+`https://<SITE_DOMAIN>` (ej. `https://100-53-6-28.sslip.io`). En
+**Enterprise applications → Users and groups**, asignar un usuario de prueba
+a cada App Role (Admin, Tecnico, Estudiante, Auditor).
+
+## 5. Verificar
+
+```bash
+curl -s localhost:8080/actuator/health                          # {"status":"UP"}
+docker compose logs caddy | grep -i "certificate obtained"      # HTTPS listo
+docker compose logs ms-campuslab-bookings | grep -i "migrat"    # V2 OUTBOX_RABBIT
+docker compose logs ms-campuslab-audit    | grep -i "migrat"    # V2 SOLICITUDES_INFORMACION
+docker compose logs ms-campuslab-notify   | grep -i "started"   # consumidores conectados a RabbitMQ
+```
+
+Luego abrir `https://<SITE_DOMAIN>` y entrar con cada usuario de prueba.
+
+Si la topología de RabbitMQ no existe en el broker, importarla con
+[`infra/mq/definitions.json`](../mq/README.md).
 
 ## Después de reiniciar el lab
 
 1. En EC2 → Instances, verificar que las 3 instancias estén *Running*.
-2. Si el `.env` usa IP públicas, actualizarlas (o cambiarlas por las privadas).
-3. En `ec2-apps` (EC2 Instance Connect):
+2. Sin Elastic IP: actualizar `SITE_DOMAIN` en `.env` y la Redirect URI de
+   Azure con la nueva IP pública de `ec2-apps`.
+3. En `ec2-apps`:
 
    ```bash
-   docker ps                                   # contenedores en ejecución
-   timeout 3 bash -c "</dev/tcp/<ip-ec2-mq>/5672"    && echo "RabbitMQ OK"
-   timeout 3 bash -c "</dev/tcp/<ip-ec2-kafka>/9092" && echo "Kafka OK"
-   cd ~/campuslab/MS-Campuslab-BFF/infra/aws
-   docker compose up -d                        # levantar/reiniciar los servicios
+   timeout 3 bash -c "</dev/tcp/<ip-privada-ec2-mq>/5672"    && echo "RabbitMQ OK"
+   timeout 3 bash -c "</dev/tcp/<ip-privada-ec2-kafka>/9092" && echo "Kafka OK"
+   cd ~/campuslab/MS-Campuslab-BFF/infra/aws && docker compose up -d
    ```
 
-   Si RabbitMQ estuvo caido, bookings envia solo los avisos que quedaron
-   pendientes en `OUTBOX_RABBIT` apenas vuelve el broker. Los mensajes que
-   hayan terminado en una DLQ se reenvian desde el panel RabbitMQ de la web
-   (boton **Reprocesar**).
-
-4. Si la topología de RabbitMQ no existe en el broker, importarla con
-   [`infra/mq/definitions.json`](../mq/README.md).
+Si RabbitMQ estuvo caído, bookings envía solo los avisos que quedaron
+pendientes en `OUTBOX_RABBIT` apenas vuelve el broker. Los mensajes que
+terminaron en una DLQ se reenvían desde el panel RabbitMQ de la web (botón
+**Reprocesar**).
