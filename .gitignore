@@ -6,3 +6,7 @@ target/
 *.iml
 .vscode/
 .DS_Store
+
+# Credenciales de despliegue (ver infra/aws/.env.example)
+.env
+!.env.example

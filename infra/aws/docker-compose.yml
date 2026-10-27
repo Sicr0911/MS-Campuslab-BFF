@@ -1,0 +1,107 @@
+# CampusLab en ec2-apps: frontend + BFF + microservicios.
+#
+# Supone los repositorios clonados uno al lado del otro, por ejemplo:
+#   ~/campuslab/Front-CampusLab
+#   ~/campuslab/MS-Campuslab-BFF          <- este archivo: infra/aws/docker-compose.yml
+#   ~/campuslab/MS-Campuslab-Bookings
+#   ~/campuslab/ms-campuslab-catalog  ...
+#
+# Uso (desde esta carpeta):
+#   cp .env.example .env    # y completar los valores
+#   docker compose up -d --build
+#
+# Solo el frontend publica un puerto (WEB_PORT, 80 por defecto): nginx
+# reenvia /api/* al BFF por la red interna. El BFF y los microservicios NO
+# quedan expuestos a internet; en particular catalog (sin seguridad propia)
+# solo es alcanzable desde bookings y el BFF.
+
+x-java: &java
+  restart: unless-stopped
+  env_file: .env
+  networks: [campuslab]
+
+x-health: &health
+  interval: 15s
+  timeout: 5s
+  retries: 5
+  start_period: 90s
+
+services:
+  frontend:
+    build: ../../../Front-CampusLab
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-80}:80"
+    depends_on:
+      ms-campuslab-bff:
+        condition: service_healthy
+    networks: [campuslab]
+
+  ms-campuslab-bff:
+    <<: *java
+    build: ../../ms-campuslab-bff
+    container_name: ms-campuslab-bff
+    environment:
+      CATALOG_SERVICE_URL: http://ms-campuslab-catalog:8081
+      BOOKINGS_SERVICE_URL: http://ms-campuslab-bookings:8082
+      AUDIT_SERVICE_URL: http://ms-campuslab-audit:8084
+      REPORT_SERVICE_URL: http://ms-campuslab-report:8085
+      RABBITMQ_ADMIN_SERVICE_URL: http://ms-campuslab-rabbitmq-admin:8086
+      KAFKA_ADMIN_SERVICE_URL: http://ms-campuslab-kafka-admin:8087
+    # Solo en la maquina (para depurar con curl desde ec2-apps), no a internet.
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      <<: *health
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+
+  ms-campuslab-catalog:
+    <<: *java
+    build: ../../../ms-campuslab-catalog
+    container_name: ms-campuslab-catalog
+    healthcheck:
+      <<: *health
+      test: ["CMD", "wget", "-qO-", "http://localhost:8081/actuator/health"]
+
+  ms-campuslab-bookings:
+    <<: *java
+    build: ../../../MS-Campuslab-Bookings/ms-campuslab-bookings
+    container_name: ms-campuslab-bookings
+    environment:
+      CATALOG_SERVICE_URL: http://ms-campuslab-catalog:8081
+    healthcheck:
+      <<: *health
+      test: ["CMD", "wget", "-qO-", "http://localhost:8082/actuator/health"]
+
+  ms-campuslab-notify:
+    <<: *java
+    build: ../../../ms-campuslab-notify
+    container_name: ms-campuslab-notify
+
+  ms-campuslab-audit:
+    <<: *java
+    build: ../../../ms-campuslab-audit
+    container_name: ms-campuslab-audit
+    healthcheck:
+      <<: *health
+      test: ["CMD", "wget", "-qO-", "http://localhost:8084/actuator/health"]
+
+  ms-campuslab-report:
+    <<: *java
+    build: ../../../ms-campuslab-report
+    container_name: ms-campuslab-report
+
+  ms-campuslab-rabbitmq-admin:
+    <<: *java
+    build: ../../../ms-campuslab-rabbitmq-admin
+    container_name: ms-campuslab-rabbitmq-admin
+
+  ms-campuslab-kafka-admin:
+    <<: *java
+    build: ../../../ms-campuslab-kafka-admin
+    container_name: ms-campuslab-kafka-admin
+
+networks:
+  campuslab:
+    name: campuslab
