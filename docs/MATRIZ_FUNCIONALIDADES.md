@@ -135,4 +135,4 @@ sus listeners y el BFF, rabbitmq-admin y kafka-admin simulan el token con
 
 | # | Funcionalidad | Estado | Componente | Evidencia verificable | Commit / PR |
 |---|---|---|---|---|---|
-| 38 | Despliegue reproducible en `ec2-apps` con Docker Compose; solo el frontend (80) expuesto a internet | ✅ | infra (repo BFF) | [`infra/aws/docker-compose.yml`](../infra/aws/docker-compose.yml), [`.env.example`](../infra/aws/.env.example), [`infra/aws/README.md`](../infra/aws/README.md) | EP3 |
+| 38 | Despliegue reproducible en `ec2-apps` con Docker Compose; solo Caddy (HTTPS 443/80) expuesto a internet | ✅ | infra (repo BFF) | [`infra/aws/docker-compose.yml`](../infra/aws/docker-compose.yml), [`Caddyfile`](../infra/aws/Caddyfile), [`.env.example`](../infra/aws/.env.example), [`infra/aws/README.md`](../infra/aws/README.md) | EP3 |
